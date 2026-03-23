@@ -27,7 +27,7 @@ if API_KEY:
     try:
         genai.configure(api_key=API_KEY)
         # Używamy pełnej ścieżki do modelu, aby uniknąć błędu NotFound
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('gemini-pro')
         
         # Wybór Eksperta
         tryb = st.selectbox("Wybierz eksperta:", ["💼 Praca (HR)", "❤️ Związki (Mediator)", "🏛️ Urząd (Prawnik)"])
