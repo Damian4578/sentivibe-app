@@ -5,7 +5,7 @@ from streamlit_mic_recorder import mic_recorder
 # 1. Konfiguracja strony
 st.set_page_config(page_title="SentiVibe - Twój Asystent", page_icon="🎙️")
 
-# 2. Klucz API
+# 2. Klucz API (Upewnij się, że jest poprawny!)
 API_KEY = "AIzaSyDwAlyHn2kFUgXU6B9tGrsVIPCZvs9AVrY" 
 
 # 3. Logika VIP (Panel boczny)
@@ -25,14 +25,17 @@ st.caption("Profesjonalny asystent komunikacji i emocji.")
 
 if API_KEY:
     try:
+        # Konfiguracja bazowa
         genai.configure(api_key=API_KEY)
-        # Używamy pełnej ścieżki do modelu, aby uniknąć błędu NotFound
-        model = genai.GenerativeModel('gemini-pro')
+        
+        # PRÓBA WYBORU MODELU (Różne nazwy dla różnych wersji API)
+        model_name = 'gemini-1.5-flash' # Standard 2026
+        model = genai.GenerativeModel(model_name)
         
         # Wybór Eksperta
         tryb = st.selectbox("Wybierz eksperta:", ["💼 Praca (HR)", "❤️ Związki (Mediator)", "🏛️ Urząd (Prawnik)"])
         
-        # Interfejs Mikrofonu TYLKO dla VIP
+        # Interfejs Mikrofonu
         audio_data = None
         if is_vip:
             st.subheader("🎤 Powiedz, co Cię gryzie:")
@@ -40,34 +43,37 @@ if API_KEY:
             if audio_data:
                 st.audio(audio_data['bytes'])
         
-        # Pole tekstowe
         user_text = st.text_area("Opisz sytuację tekstowo:", placeholder="Np. Szef kazał mi zostać po godzinach...")
 
         # PRZYCISK GENEROWANIA
         if st.button("SentiVibe - Generuj Pomoc"):
-            # Sprawdzenie czy jest jakikolwiek input
             if user_text or (is_vip and audio_data):
                 with st.spinner('SentiVibe analizuje dane...'):
-                    # Przygotowanie treści dla AI
                     context = user_text if user_text else "Użytkownik przesłał nagranie głosowe."
-                    full_prompt = f"Jesteś ekspertem w kategorii: {tryb}. Pomóż użytkownikowi rozwiązać ten problem: {context}"
+                    full_prompt = f"Jesteś ekspertem: {tryb}. Pomóż rozwiązać ten problem: {context}"
                     
                     try:
+                        # Wymuszamy najprostszą metodę generowania
                         response = model.generate_content(full_prompt)
                         st.subheader("💡 Twoje rozwiązanie:")
                         st.write(response.text)
                         
-                        # REKLAMA (Tylko dla darmowych)
                         if not is_vip:
                             st.divider()
-                            st.info("👉 **Rekomendacja eksperta:** [Sprawdź profesjonalne wsparcie tutaj](https://twoj-link-z-mylead.pl)")
+                            st.info("👉 **Rekomendacja:** [Profesjonalne wsparcie](https://twoj-link-z-mylead.pl)")
                     except Exception as e:
-                        st.error(f"Błąd AI: {e}")
+                        # Jeśli flash nie działa, próbujemy starszy gemini-pro
+                        try:
+                            alt_model = genai.GenerativeModel('gemini-pro')
+                            response = alt_model.generate_content(full_prompt)
+                            st.write(response.text)
+                        except:
+                            st.error(f"Błąd modelu AI: {e}. Sprawdź czy Twój klucz API jest aktywny w Google AI Studio.")
             else:
-                st.error("Wpisz wiadomość lub użyj mikrofonu (VIP)!")
+                st.error("Wpisz wiadomość!")
                 
     except Exception as e:
-        st.error(f"Błąd konfiguracji: {e}")
+        st.error(f"Błąd systemu: {e}")
 else:
     st.warning("Błąd: Brak klucza API.")
 
