@@ -5,7 +5,7 @@ import requests
 st.set_page_config(page_title="SentiVibe AI", page_icon="🎙️")
 
 # 2. TWÓJ TOKEN HUGGING FACE (Wklej go między cudzysłowy poniżej)
-HF_TOKEN = "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"
+HF_TOKEN = "hf_gfHjYoPUGhBkvUSslRvnZazaRhYdTBd"
 
 # Model Mistral - darmowy i świetny po polsku
 API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
