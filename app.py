@@ -67,4 +67,4 @@ else:
 
 # Stopka
 st.markdown("---")
-st.markdown("<center><small>SentiVibe.com © 2026</small></center>", unsafe_allow_all_headers=True)
+st.markdown("<center><small>SentiVibe.com © 2026</small></center>", unsafe_allow_html=True)
