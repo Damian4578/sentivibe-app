@@ -7,7 +7,7 @@ st.set_page_config(page_title="SentiVibe", page_icon="🎙️")
 
 # 2. Tu wklej swój klucz API z Google AI Studio
 # Możesz go też podpiąć w Settings -> Secrets w Streamlit Cloud jako API_KEY
-API_KEY = "TWÓJ_KLUCZ_API_TUTAJ" 
+API_KEY = "AIzaSyDwAlyHn2kFUgXU6B9tGrsVIPCZvs9AVrY" 
 
 if API_KEY and API_KEY != "TWÓJ_KLUCZ_API_TUTAJ":
     genai.configure(api_key=API_KEY)
