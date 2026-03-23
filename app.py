@@ -6,7 +6,7 @@ from streamlit_mic_recorder import mic_recorder
 st.set_page_config(page_title="SentiVibe - Twój Asystent", page_icon="🎙️")
 
 # 2. Klucz API (Upewnij się, że jest poprawny!)
-API_KEY = "AIzaSyDwAlyHn2kFUgXU6B9tGrsVIPCZvs9AVrY" 
+API_KEY = "AIzaSyCk5R34bTFP9Ha8CpRJRoHW45pU43WSYVM" 
 
 # 3. Logika VIP (Panel boczny)
 with st.sidebar:
