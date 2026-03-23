@@ -1,82 +1,61 @@
 import streamlit as st
-import google.generativeai as genai
-from streamlit_mic_recorder import mic_recorder
+import requests
 
 # 1. Konfiguracja strony
-st.set_page_config(page_title="SentiVibe - Twój Asystent", page_icon="🎙️")
+st.set_page_config(page_title="SentiVibe AI", page_icon="🎙️")
 
-# 2. Klucz API (Upewnij się, że jest poprawny!)
-API_KEY = "AIzaSyCk5R34bTFP9Ha8CpRJRoHW45pU43WSYVM" 
+# 2. TWÓJ TOKEN HUGGING FACE (Wklej go między cudzysłowy poniżej)
+HF_TOKEN = "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"
 
-# 3. Logika VIP (Panel boczny)
-with st.sidebar:
-    st.header("🌟 SentiVibe VIP")
-    kod_vip = st.text_input("Wpisz kod dostępu:", type="password")
-    is_vip = (kod_vip == "PREMIER2024")
-    
-    if is_vip:
-        st.success("Tryb VIP AKTYWNY")
-    else:
-        st.info("Tryb Darmowy (z reklamami)")
+# Model Mistral - darmowy i świetny po polsku
+API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
-# 4. Główne okno aplikacji
+def query_ai(text, tryb_eksperta):
+    # Tworzymy instrukcję dla modelu
+    prompt = f"Jesteś ekspertem: {tryb_eksperta}. Odpowiedz krótko i konkretnie po polsku na problem: {text}"
+    payload = {
+        "inputs": f"<s>[INST] {prompt} [/INST]",
+        "parameters": {"max_new_tokens": 500, "temperature": 0.7}
+    }
+    # Wysyłamy zapytanie do Hugging Face przez requests
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
+
+# 3. Interfejs SentiVibe
 st.title("🎙️ SentiVibe.com")
-st.caption("Profesjonalny asystent komunikacji i emocji.")
+st.write("Twoje wsparcie w trudnych rozmowach.")
 
-if API_KEY:
-    try:
-        # Konfiguracja bazowa
-        genai.configure(api_key=API_KEY)
-        
-        # PRÓBA WYBORU MODELU (Różne nazwy dla różnych wersji API)
-        model_name = 'gemini-1.5-flash' # Standard 2026
-        model = genai.GenerativeModel(model_name)
-        
-        # Wybór Eksperta
-        tryb = st.selectbox("Wybierz eksperta:", ["💼 Praca (HR)", "❤️ Związki (Mediator)", "🏛️ Urząd (Prawnik)"])
-        
-        # Interfejs Mikrofonu
-        audio_data = None
-        if is_vip:
-            st.subheader("🎤 Powiedz, co Cię gryzie:")
-            audio_data = mic_recorder(start_prompt="Nagraj (VIP)", stop_prompt="Zatrzymaj", key='recorder')
-            if audio_data:
-                st.audio(audio_data['bytes'])
-        
-        user_text = st.text_area("Opisz sytuację tekstowo:", placeholder="Np. Szef kazał mi zostać po godzinach...")
+with st.sidebar:
+    st.header("🌟 VIP")
+    kod = st.text_input("Kod:", type="password")
+    is_vip = (kod == "PREMIER2024")
 
-        # PRZYCISK GENEROWANIA
-        if st.button("SentiVibe - Generuj Pomoc"):
-            if user_text or (is_vip and audio_data):
-                with st.spinner('SentiVibe analizuje dane...'):
-                    context = user_text if user_text else "Użytkownik przesłał nagranie głosowe."
-                    full_prompt = f"Jesteś ekspertem: {tryb}. Pomóż rozwiązać ten problem: {context}"
-                    
-                    try:
-                        # Wymuszamy najprostszą metodę generowania
-                        response = model.generate_content(full_prompt)
-                        st.subheader("💡 Twoje rozwiązanie:")
-                        st.write(response.text)
-                        
-                        if not is_vip:
-                            st.divider()
-                            st.info("👉 **Rekomendacja:** [Profesjonalne wsparcie](https://twoj-link-z-mylead.pl)")
-                    except Exception as e:
-                        # Jeśli flash nie działa, próbujemy starszy gemini-pro
-                        try:
-                            alt_model = genai.GenerativeModel('gemini-pro')
-                            response = alt_model.generate_content(full_prompt)
-                            st.write(response.text)
-                        except:
-                            st.error(f"Błąd modelu AI: {e}. Sprawdź czy Twój klucz API jest aktywny w Google AI Studio.")
-            else:
-                st.error("Wpisz wiadomość!")
+tryb = st.selectbox("Ekspert:", ["💼 Praca", "❤️ Związki", "🏛️ Urząd"])
+user_text = st.text_area("Opisz sytuację:")
+
+if st.button("Generuj Pomoc"):
+    if user_text:
+        with st.spinner('SentiVibe AI pracuje...'):
+            try:
+                res = query_ai(user_text, tryb)
                 
-    except Exception as e:
-        st.error(f"Błąd systemu: {e}")
-else:
-    st.warning("Błąd: Brak klucza API.")
+                # Wyciąganie odpowiedzi z formatu HuggingFace
+                if isinstance(res, list) and len(res) > 0:
+                    raw_text = res[0].get('generated_text', '')
+                    answer = raw_text.split("[/INST]")[-1].strip()
+                    st.success("💡 Odpowiedź:")
+                    st.write(answer)
+                    
+                    if not is_vip:
+                        st.divider()
+                        st.info("👉 [Rekomendacja eksperta](TWOJ_LINK_MYLEAD)")
+                else:
+                    st.info("🤖 AI się budzi... Kliknij przycisk jeszcze raz za 10 sekund!")
+            except Exception as e:
+                st.error("Wystąpił błąd połączenia. Spróbuj ponownie.")
+    else:
+        st.error("Wpisz tekst!")
 
-# Stopka
 st.markdown("---")
 st.markdown("<center><small>SentiVibe.com © 2026</small></center>", unsafe_allow_html=True)
